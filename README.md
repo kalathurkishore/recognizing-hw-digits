@@ -1,4 +1,4 @@
-# recognizing-hw-digits
+# Metrics of the recognizing-hw-digits
 i)When gamma value is very less the accuracy of the model is very less and it is almost constant.</br>
 ii)When gamma value is from 0.00001 to 0.001 the accuracy of the model is increasing from 86.11% to 97.03%</br>
 iii)When gamma value is from 0.01 to 10000 the accuracy of the model is decreasing and then it remains constant.</br>
