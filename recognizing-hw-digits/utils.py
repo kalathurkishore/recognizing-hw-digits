@@ -1,7 +1,7 @@
 from skimage.transform import rescale
 import numpy as np
 import os
-# Import datasets, classifiers and performance metrics
+#Import datasets, classifiers and performance metrics
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
