@@ -96,5 +96,5 @@ for test_size,validation_size in [(0.15,0.15)]:
       f1 = metrics.f1_score(y_pred = predicted,y_true = y_test,average = "macro")
      #metrics = test(clf,X_test,y_test)
       print("{}*{}\t{}\t{}:{}\t{:.5f}\t{:.5f}".format(resized_images[0].shape[0],resized_images[0].shape[1],max_valid_f1_model_candidate['gamma'],(1-test_size)*100,test_size*100,
-                                                     metrics['acc'],
-                                                     metrics['f1']))
+                                                     accuracy,
+                                                     f1))
