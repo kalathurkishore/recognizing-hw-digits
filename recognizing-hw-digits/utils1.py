@@ -1,27 +1,31 @@
 from skimage.transform import rescale
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
-import numpy as np
 
-def preprocess_images(images, rescale_factor, anti_aliasing=False):
-    return np.array([rescale(x, rescale_factor, anti_aliasing=anti_aliasing) for x in images])
+def preprocess(images, rescale_factor):
+    resized_images = []
+    for d in images:
+        resized_images.append(rescale(d, rescale_factor, anti_aliasing=False))
+    return resized_images
 
-def create_ttv_splits(data, target, test_size, valid_size):
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        data, target, test_size=test_size*valid_size, shuffle=False)
-    X_test, X_valid, Y_test, Y_valid = train_test_split(
-        X_test, Y_test,
-        test_size=(valid_size/(test_size+valid_size)),
+
+def create_splits(data, targets, test_size, valid_size):
+    X_train, X_test_valid, y_train, y_test_valid = train_test_split(
+        data, targets, test_size=test_size + valid_size, shuffle=False
+    )
+
+    X_test, X_valid, y_test, y_valid = train_test_split(
+        X_test_valid,
+        y_test_valid,
+        test_size=valid_size / (test_size + valid_size),
         shuffle=False,
     )
-    return X_train, X_test, X_valid, Y_train, Y_test, Y_valid
+    return X_train, X_test, X_valid, y_train, y_test, y_valid
 
-def predict_metrics(model, X, Y):
-    predicted = model.predict(X)
-    acc = metrics.accuracy_score(Y, predicted)
-    f1 = metrics.f1_score(Y, predicted, average='macro')
-    return {
-        'model': model,
-        'acc': acc,
-        'f1': f1,
-    }
+
+def test_(clf, X, y):
+    predicted = clf.predict(X)
+    acc = metrics.accuracy_score(y_pred=predicted, y_true=y)
+    f1 = metrics.f1_score(y_pred=predicted, y_true=y, average="macro")
+
+    return {"acc": acc, "f1": f1}
