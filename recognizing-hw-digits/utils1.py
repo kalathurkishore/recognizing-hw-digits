@@ -9,7 +9,21 @@ def preprocess(images, rescale_factor):
     return resized_images
 
 
-def create_splits(data, targets, test_size, valid_size):
+def create_splits(data, targets, test_size, valid_size , case = False):
+
+    if(case == True):
+        n_samples = data.size
+        val_ratio = valid_size
+        test_ratio = test_size
+        train_ratio = 1 - val_ratio - test_ratio
+        train_sample = math.ceil(n_samples *train_ratio)
+        test_sample = math.ceil(n_samples *test_ratio)
+        val_sample = math.ceil(n_samples *val_ratio)
+        
+        return train_sample , test_sample , val_sample
+
+
+
     X_train, X_test_valid, y_train, y_test_valid = train_test_split(
         data, targets, test_size=test_size + valid_size, shuffle=False
     )
@@ -20,6 +34,9 @@ def create_splits(data, targets, test_size, valid_size):
         test_size=valid_size / (test_size + valid_size),
         shuffle=False,
     )
+
+
+
     return X_train, X_test, X_valid, y_train, y_test, y_valid
 
 
