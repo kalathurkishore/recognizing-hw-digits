@@ -24,14 +24,63 @@ from plot_digits import classification_of_data
 from sklearn import datasets
 
 
-def test_model_writing():
+def test_create_split_bonus():
 	digits = datasets.load_digits()
-	metric , model_path = classification_of_data(digits)
-	final_file = '../recognizing-hw-digits/' + model_path[1:] 
-	assert os.path.isdir(final_file)
+	n_samples = len(digits.images)
+	val_ratio = 0.2
+	test_ratio = 0.1
+	train_ratio = 1 - val_ratio - test_ratio
 
-def test_small_data_overfit_checking():
+	train_sample = math.ceil(n_samples *train_ratio)
+	test_sample = math.ceil(n_samples *test_ratio)
+	val_sample = math.ceil(n_samples *val_ratio)
+
+	actual_train ,actual_test , actual_valid ,_ ,_ ,_= create_splits(digits.images, digits.target, test_ratio, val_ratio)    
+    
+	total = len(actual_train) + len(actual_test) + len(actual_valid) 
+
+	assert train_sample == len(actual_train)
+	assert test_sample == len(actual_test)
+	assert val_sample == len(actual_valid)
+	assert n_samples == total
+
+
+def test_create_split_1():
 	digits = datasets.load_digits()
-	metrics , _ = classification_of_data(digits,isTrain=True)
-	assert metrics['acc'] > 0.7
-	assert metrics['f1'] > 0.7
+	n_samples = 100
+	val_ratio = 0.7
+	test_ratio = 0.2
+	train_ratio = 1 - val_ratio - test_ratio
+
+	train_sample = int(n_samples *train_ratio)
+	test_sample = int(n_samples *test_ratio)
+	val_sample = int(n_samples *val_ratio)
+
+	actual_train ,actual_test , actual_valid ,_ ,_ ,_= create_splits(digits.images[:n_samples ], digits.target[:n_samples ], test_ratio, val_ratio)    
+    
+	total = len(actual_train) + len(actual_test) + len(actual_valid) 
+
+	assert train_sample == len(actual_train)
+	assert test_sample == len(actual_test)
+	assert val_sample == len(actual_valid)
+	assert n_samples == total
+
+def test_create_split_2():
+	digits = datasets.load_digits()
+	n_samples = 9
+	val_ratio = 0.7
+	test_ratio = 0.2
+	train_ratio = 1 - val_ratio - test_ratio
+
+	train_sample = math.ceil(n_samples *train_ratio)
+	test_sample = math.ceil(n_samples *test_ratio)
+	val_sample = math.ceil(n_samples *val_ratio)
+
+	actual_train ,actual_test , actual_valid = create_splits(digits.images[:n_samples ], digits.target[:n_samples ], test_ratio, val_ratio,case = True)    
+    
+	total = actual_train +actual_test + actual_valid 
+
+	assert train_sample == len(actual_train)
+	assert test_sample == len(actual_test)
+	assert val_sample == len(actual_valid)
+	assert n_samples == total
