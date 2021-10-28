@@ -60,7 +60,7 @@ def bestcandidatemodel(model_candidates,test_size, valid_size, rescale_factor,pa
     predicted = clf.predict(X_test)
     acc = metrics.accuracy_score(y_pred=predicted, y_true=y_test)
     f1 = metrics.f1_score(y_pred=predicted, y_true=y_test, average="macro")
-    print("For size {}x{} best {} value is {} train to test ratio is {}:{} with accuracy as {:.3f} and f1 score as {:.3f}".format(
+    print("For size {}x{} best {} value is {} and train to test ratio is {}:{} with accuracy as {:.3f} and f1 score as {:.3f}".format(
     resized_images[0].shape[0],
     resized_images[0].shape[1],
     param,
@@ -79,8 +79,8 @@ acc_svm=[]
 acc_DT=[]
 for size in range(5):
     for rescale_factor in rescale_factors:
-        model_candidates = []
-        model_candidatestree=[]
+        model_candidates = [] #For SVM
+        model_candidatestree=[] #For Decision Tree
         maxdepth=[5,20,35,50,65,80]
         gammaarr=[1,0.5,0.01,0.001,0.0001,0.000005]
         resized_images = preprocess(digits.images,rescale_factor)
@@ -133,88 +133,3 @@ print("For SVM : Mean = {}  variance = {} ".format(svm_mean,svm_variance))
 print("For Decision Tree : Mean = {}  variance = {} ".format(decisiontree_mean,decisiontree_variance))
 
             
-'''
-# flatten the images
-n_samples = len(digits.images)
-
-# rescale_factors = [0.25, 0.5, 1, 2, 3]
-rescale_factors = [1]
-for test_size, valid_size in [(0.15, 0.15)]:
-    for rescale_factor in rescale_factors:
-        model_candidates = []
-        for gamma in [1,0.5,0.01,0.001,0.0001,0.000005]:
-            resized_images = preprocess(digits.images,rescale_factor)
-
-            resized_images = np.array(resized_images)
-            data = resized_images.reshape((n_samples, -1))
-
-            # Create a classifier: a support vector classifier
-            clf = svm.SVC(gamma=gamma)
-
-            clf1 = tree.DecisionTreeClassifier()
-            output_folder = "../models/tt_{}_val_{}_rescale_{}_gamma_{}".format(
-                test_size, valid_size, rescale_factor, gamma
-            )
-            output_model_file=os.path.join(output_folder,"model.joblib")
-
-            X_train, X_test,X_valid,y_train,y_test,y_valid=createsplit(data,digits.target,test_size,valid_size)
-
-            # print("Number of samples: Train:Valid:Test = {}:{}:{}".format(len(y_train),len(y_valid),len(y_test)))
-            metrics_value=run_classification_experiment(clf,X_train,y_train,X_valid,y_valid,gamma,output_model_file)
-            metrics_value=run_classification_experiment1(clf1,X_train,y_train,X_valid,y_valid,gamma,output_model_file)
-
-            # Learn the digits on the train subset
-            #print(metrics_value)
-            
-            # we will ensure to throw away some of the models that yield random-like performance.
-            if metrics_value==None:
-                continue
-
-            candidate = {
-                "acc_valid": metrics_value['acc'],
-                "f1_valid": metrics_value['f1'],
-                "gamma": gamma,
-            }
-            model_candidates.append(candidate)
-            
-            #os.mkdir(output_folder)
-            #dump(clf, os.path.join(output_folder,"model.joblib"))
-
-            
-        # Predict the value of the digit on the test subset
-
-        max_valid_f1_model_candidate = max(
-            model_candidates, key=lambda x: x["f1_valid"]
-        )
-        best_model_folder="../models/tt_{}_val_{}_rescale_{}_gamma_{}".format(
-                test_size, valid_size, rescale_factor, max_valid_f1_model_candidate['gamma']
-            )
-        clf = load(os.path.join(best_model_folder,"model.joblib"))
-        predicted = clf.predict(X_test)
-        predicted1 = clf1.predict(X_test)
-        acc = metrics.accuracy_score(y_pred=predicted, y_true=y_test)
-        f1 = metrics.f1_score(y_pred=predicted, y_true=y_test, average="macro")
-        acc1 = metrics.accuracy_score(y_pred=predicted1, y_true=y_test)
-        f11 = metrics.f1_score(y_pred=predicted1, y_true=y_test, average="macro")
-        print(
-            "For SVM size {}x{} the best gamma value is {} train to test ratio is {}:{} with accuracy as {:.3f} and f1 score as {:.3f}".format(
-                resized_images[0].shape[0],
-                resized_images[0].shape[1],
-                max_valid_f1_model_candidate["gamma"],
-                (1 - test_size) * 100,
-                test_size * 100,
-                acc,
-                f1,
-            )
-        )
-        print(
-            "For Decision Tree size {}x{} the best gamma value is {} train to test ratio is {}:{} with accuracy as {:.3f} and f1 score as {:.3f}".format(
-                resized_images[0].shape[0],
-                resized_images[0].shape[1],
-                max_valid_f1_model_candidate["gamma"],
-                (1 - test_size) * 100,
-                test_size * 100,
-                acc1,
-                f11,
-            )
-        )'''
