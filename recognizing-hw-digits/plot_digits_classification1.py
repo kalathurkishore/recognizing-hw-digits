@@ -12,6 +12,7 @@ print(__doc__)
 # License: BSD 3 clause
 
 import os
+import math
 import matplotlib.pyplot as plt
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
@@ -52,6 +53,9 @@ digits = datasets.load_digits()
 # vector classifier on the train samples. The fitted classifier can
 # subsequently be used to predict the value of the digit for the samples
 # in the test subset.
+f1s = []
+gparams = []
+dparams = []
 def bestcandidatemodel(model_candidates,test_size, valid_size, rescale_factor,param,X_test,y_test):
 # Predict the value of the digit on the test subset
     max_valid_f1_model_candidate = max(model_candidates, key=lambda x: x["f1_valid"])
@@ -60,6 +64,12 @@ def bestcandidatemodel(model_candidates,test_size, valid_size, rescale_factor,pa
     predicted = clf.predict(X_test)
     acc = metrics.accuracy_score(y_pred=predicted, y_true=y_test)
     f1 = metrics.f1_score(y_pred=predicted, y_true=y_test, average="macro")
+    f1s.append(f1)
+    k = max_valid_f1_model_candidate[param]
+    if k>1:
+        dparams.append(max_valid_f1_model_candidate[param])
+    else:
+        gparams.append(max_valid_f1_model_candidate[param])
     print("For size {}x{} best {} value is {} and train to test ratio is {}:{} with accuracy as {:.3f} and f1 score as {:.3f}".format(
     resized_images[0].shape[0],
     resized_images[0].shape[1],
@@ -74,7 +84,7 @@ n_samples = len(digits.images)
 
 # rescale_factors = [0.25, 0.5, 1, 2, 3]
 rescale_factors = [1]
-split=[0.05,0.1,0.15,0.2,0.25]
+split=[0.15,0.15,0.15,0.15,0.15]
 acc_svm=[]
 acc_DT=[]
 for size in range(5):
@@ -82,7 +92,7 @@ for size in range(5):
         model_candidates = [] #For SVM
         model_candidatestree=[] #For Decision Tree
         maxdepth=[5,20,35,50,65,80]
-        gammaarr=[1,0.5,0.01,0.001,0.0001,0.000005]
+        gammaarr=[1,0.1,0.01,0.03,0.001,0.003]
         resized_images = preprocess(digits.images,rescale_factor)
         resized_images = np.array(resized_images)
         data = resized_images.reshape((n_samples, -1))
@@ -127,9 +137,16 @@ for size in range(5):
 
 svm_mean = sum(acc_svm) / len(acc_svm)
 svm_variance = sum((i - svm_mean) ** 2 for i in acc_svm) / len(acc_svm)
+svm_sd = math.sqrt(svm_variance)
 decisiontree_mean = sum(acc_DT) / len(acc_DT)
 decisiontree_variance = sum((i - decisiontree_mean ) ** 2 for i in acc_DT) / len(acc_DT)
-print("For SVM : Mean = {}  variance = {} ".format(svm_mean,svm_variance))
-print("For Decision Tree : Mean = {}  variance = {} ".format(decisiontree_mean,decisiontree_variance))
+decisiontree_sd = math.sqrt(decisiontree_variance)
+print("Iteration\t","Gamma value\t","SVM Accuracy\t","\tSVM F1 Score\t","\tDepth\t","\tDT Accuracy\t","DT F1 Score\t")
+print("-------------------------------------------------------------------------------------------------------------------------------")
+for i in range(5):
+	print(i,"\t",gparams[i],acc_svm[i],f1s[i],dparams[i],acc_DT[i],f1s[i+5],sep='\t')
+print("-------------------------------------------------------------------------------------------------------------------------------")
+print("For SVM : Mean = {}  variance = {} Standard deviation = {}".format(svm_mean,svm_variance,svm_sd))
+print("For Decision Tree : Mean = {}  variance = {} Standard deviation = {}".format(decisiontree_mean,decisiontree_variance,decisiontree_sd))
 
             
