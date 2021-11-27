@@ -4,3 +4,6 @@ scikit-image==0.17.2
 pytest==6.2.5
 flask==2.0.2
 flask-restx==0.5.1
+addict
+tqdm
+pillow == 6.2.2
