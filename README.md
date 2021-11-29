@@ -1,4 +1,5 @@
 # recognizing-hw-digits
+The comparision of confusion matrices based on training data.
 ![DT Confusion Matrix for 10% training data](https://user-images.githubusercontent.com/34184719/143935169-167b627c-b0a0-4cdd-862f-61d7f366b1d4.png)
 ![DT Confusion Matrix for 20% training data](https://user-images.githubusercontent.com/34184719/143935270-0bebdf86-e379-4e51-a5f1-d7b30bd16b70.png)
 ![DT Confusion Matrix for 30% training data](https://user-images.githubusercontent.com/34184719/143935309-246bf65e-03fc-42ea-b9d6-a7b04da1e215.png)
