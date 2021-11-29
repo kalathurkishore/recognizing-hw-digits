@@ -29,7 +29,7 @@ def predict_svm():
     image = input_json['image']
     image = np.array(image).reshape(1,-1)
     prediction = clf.predict(image)
-    output = '\n Predicted digit is : ' + str(prediction[0]) + '\n\n'
+    output = 'classifier is SVM\n'+'\n Predicted digit is : ' + str(prediction[0]) + '\n\n'
     return  output
     #return "<p>image received</p>"
 
@@ -39,7 +39,7 @@ def predict_dt():
     image = input_json['image']
     image = np.array(image).reshape(1,-1)
     prediction = clf1.predict(image)
-    output = '\n Predicted digit is : ' + str(prediction[0]) + '\n\n'
+    output = 'classifier is DT\n'+'\n Predicted digit is : ' + str(prediction[0]) + '\n\n'
     return  output
     #return "<p>image received</p>"
 
