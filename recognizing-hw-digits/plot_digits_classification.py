@@ -1,92 +1,137 @@
-from sys import path
+"""
+================================
+Recognizing hand-written digits
+================================
+This example shows how scikit-learn can be used to recognize images of
+hand-written digits, from 0-9.
+"""
+
+print(__doc__)
+
+# Author: Gael Varoquaux <gael dot varoquaux at normalesup dot org>
+# License: BSD 3 clause
+
+import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from utils import test, preprocess,createsplitwithsuffle,run_classification_experiment,train_val_splits
+
+from sklearn.metrics import plot_confusion_matrix
+from sklearn import datasets, svm, metrics
+from sklearn.tree import DecisionTreeClassifier
 from joblib import dump, load
-from sklearn import datasets, svm
-import os, pathlib
-from .utils import *
 
-def train_model(X_train, X_valid, Y_train, Y_valid, gamma):
-    # Create a classifier: a support vector classifier
+
+
+plt.rcParams.update({'figure.max_open_warning': 0})
+
+###############################################################################
+# Digits dataset
+# --------------
+#
+# The digits dataset consists of 8x8
+# pixel images of digits. The ``images`` attribute of the dataset stores
+# 8x8 arrays of grayscale values for each image. We will use these arrays to
+# visualize the first 4 images. The ``target`` attribute of the dataset stores
+# the digit each image represents and this is included in the title of the 4
+# plots below.
+#
+# Note: if we were working from image files (e.g., 'png' files), we would load
+# them using :func:`matplotlib.pyplot.imread`.
+
+digits = datasets.load_digits()
+
+###############################################################################
+# Classification
+# --------------
+#
+# To apply a classifier on this data, we need to flatten the images, turning
+# each 2-D array of grayscale values from shape ``(8, 8)`` into shape
+# ``(64,)``. Subsequently, the entire dataset will be of shape
+# ``(n_samples, n_features)``, where ``n_samples`` is the number of images and
+# ``n_features`` is the total number of pixels in each image.
+#
+# We can then split the data into train and test subsets and fit a support
+# vector classifier on the train samples. The fitted classifier can
+# subsequently be used to predict the value of the digit for the samples
+# in the test subset.
+
+n_samples = len(digits.images)
+data = digits.images.reshape((n_samples, -1))
+train_split = [10,20,30,40,50,60,70,80,90,100]
+
+svm_columns = ['Training Data', 'Gamma', 'SVM_Test_Accuracy', 'SVM_Validation_Accuracy', 'SVM_F1_Score']
+svm_output = pd.DataFrame(data = [], columns=svm_columns)
+gamma = [1,0.1,0.01,0.03,0.001,0.003]
+
+dt_columns = ['Trainining Data', 'MaxDepth', 'DT_Test_Accuracy',  'DT_Validation_Accuracy', 'DT_F1_Score']
+dt_output = pd.DataFrame(data = [], columns=dt_columns)
+depths = [5,12,20,35,50,65]
+
+
+def dt_train(x_train, y_train, x_val, y_val, x_test, y_test, depth, cmd=False, td=None):
+    dt = DecisionTreeClassifier(max_depth=depth)
+    t_ac,val_ac,predicted,f1=train_val_splits(dt,x_train,y_train,x_test, y_test,x_val, y_val)
+    if cmd:
+        cm = metrics.confusion_matrix(predicted, y_test, labels  = [0,1,2,3,4,5,6,7,8,9])
+        disp = metrics.ConfusionMatrixDisplay(cm)
+        ttl = 'DT Confusion Matrix for ' + str(td) + '% training data'
+        disp.plot()
+        plt.title(ttl)
+        file_name = "%s.png" % ttl
+        plt.savefig(file_name)
+        plt.show()
+    return t_ac, val_ac, f1
+
+def svm_train(x_train, y_train, x_val, y_val, x_test, y_test, gamma, cmd=False, td = None):
     clf = svm.SVC(gamma=gamma)
-    # Learn the digits on the train subset
-    clf.fit(X_train, Y_train)
-    # test model
-    valid_metrics = predict_metrics(clf, X_valid, Y_valid)
-    # return model
-    return {
-        **valid_metrics,
-        "gamma": gamma,
-    }
+    t_ac,val_ac,predicted,f1=train_val_splits(clf,x_train,y_train,x_test, y_test,x_val, y_val)
+    plot_confusion_matrix(clf, x_train, y_train)  
+    plt.show()
+    if cmd:
+        cm = metrics.confusion_matrix(predicted, y_test, labels  = [0,1,2,3,4,5,6,7,8,9])
+        disp = metrics.ConfusionMatrixDisplay(cm)
+        ttl = 'SVM Confusion Matrix for ' + str(td) + '% training data'
+        disp.plot()
+        plt.title(ttl)
+        file_name = "%s.png" % ttl
+        plt.savefig(file_name)
+    return t_ac, val_ac, f1
+test_size=0.1
+valid_size=0.1
+resized_images = preprocess(digits.images,1)
+resized_images = np.array(resized_images)
+data = resized_images.reshape((n_samples, -1))
+x_train, x_test,x_val,y_train,y_test,y_val = createsplitwithsuffle(data, digits.target, test_size, valid_size)
+for gamma in gamma:
+  for tr in train_split:
+    sp = int(tr/100 * len(x_train))
+    n_train = x_train[:sp]
+    n_ytrain = y_train[:sp]
+    if gamma == 0.001:
+      st_ac, sval_ac, sf1 = svm_train(n_train, n_ytrain, x_val, y_val, x_test, y_test, gamma, True, tr)
+    else:
+      st_ac, sval_ac, sf1 = svm_train(n_train, n_ytrain, x_val, y_val, x_test, y_test, gamma)
+    out = pd.DataFrame(data = [[tr, gamma, st_ac, sval_ac, sf1]],columns = svm_columns)
+    svm_output = svm_output.append(out, ignore_index=True)
+    
+for depth in depths:
+  for tr in train_split:
+    sp = int(tr/100 * len(x_train))
+    n_train = x_train[:sp]
+    n_ytrain = y_train[:sp]
+    if depth == 12:
+      t_ac, val_ac, f1 = dt_train(n_train, n_ytrain, x_val, y_val, x_test, y_test, depth, True, tr)
+    else:
+      t_ac, val_ac, f1 = dt_train(n_train, n_ytrain, x_val, y_val, x_test, y_test, depth)
+    out = pd.DataFrame(data = [[tr, depth, t_ac, val_ac, f1]],
+    columns = dt_columns)
+    dt_output = dt_output.append(out, ignore_index=True)
 
-
-def write_trained_model(model, models_root: pathlib.Path, scaling):
-    # print(f"{gamma:.3f} --> {images.shape[1:]} --> {1-test_size}/{test_size} --> {acc:.3f} --> {f1:.3f}")
-    out_folder = (
-        models_root
-        / f"tt_{model['test_size']}_val_{model['valid_size']}_rescale_{scaling}_gamma_{model['gamma']}"
-    )
-    if out_folder.exists():
-        print(f"Model folder ({out_folder}) exists. Overwriting...")
-        os.system(f"rm -rf {str(out_folder.resolve())}")
-    os.mkdir(out_folder)
-    # save
-    dump(model["model"], out_folder / "model.jolib")
-
-
-# Run train
-if __name__ == "__main__":
-    digits = datasets.load_digits()
-    print(f"Original image size: {digits.images.shape}")
-    data = digits.images
-    n_samples = len(data)
-    # set default models root
-    models_root = pathlib.Path('./models')
-    if models_root.exists():
-        print(f"Models folder ({models_root}) exists.")
-        if (input(f"Do you want to overwrite data?[Y/n]:") or "y").lower() == "y":
-            os.system(f"rm -rf {str(models_root.resolve())}")
-    os.mkdir(models_root)
-    for test_size, valid_size in [(0.15, 0.15), (0.2, 0.1)]:
-        for scaling in [0.25, 0.5, 1, 2, 3]:
-            models = []
-            # resize data
-            images = preprocess_images(digits.images, scaling)
-            # flatten the images
-            data = images.reshape((n_samples, -1))
-            # Split data into 50% train and 50% test subsets
-            X_train, X_test, X_valid, Y_train, Y_test, Y_valid = create_ttv_splits(
-                data, digits.target, test_size, valid_size
-            )
-            for gamma in [10 ** exp for exp in range(-7, 0)]:
-                # Train model
-                model = train_model(X_train, X_valid, Y_train, Y_valid, gamma)
-                model = {
-                    **model,
-                    "scaling": scaling,
-                    "test_size": test_size,
-                    "valid_size": valid_size,
-                }
-
-                # skip weak models
-                if model["acc"] < 0.11:
-                    print(f"Skipping for gamma={gamma}.")
-                    continue
-                else:
-                    write_trained_model(model, models_root, scaling)
-
-                # save model
-                models.append(model)
-
-            # predict
-            max_f1_model = max(models, key=lambda x: x["f1"])
-            best_folder = (
-                models_root
-                / f"tt_{test_size}_val_{valid_size}_rescale_{scaling}_gamma_{max_f1_model['gamma']}"
-            )
-            # load best
-            clf = load(best_folder / "model.jolib")
-            # metrics
-            metrics = predict_metrics(clf, X_valid, Y_valid)
-            # print
-            print(
-                f"{images.shape[-2]}x{images.shape[-1]}\t{max_f1_model['gamma']}\t{(1-test_size)*100}\t{test_size*100}\t{metrics['acc']}\t{metrics['f1']}"
-            )
+print("SVM Training Output for splits ")
+print(svm_output)
+svm_output.to_csv("SVM_output.csv")
+print("Decision Tree Training Output for splits ")
+print(dt_output)
+dt_output.to_csv("DT_output.csv")

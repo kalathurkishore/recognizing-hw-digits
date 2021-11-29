@@ -1,27 +1,53 @@
 from skimage.transform import rescale
-from sklearn.model_selection import train_test_split
-from sklearn import metrics
 import numpy as np
+import os
+# Import datasets, classifiers and performance metrics
+from sklearn import datasets, svm, metrics
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from joblib import dump, load
 
-def preprocess_images(images, rescale_factor, anti_aliasing=False):
-    return np.array([rescale(x, rescale_factor, anti_aliasing=anti_aliasing) for x in images])
+def preprocess(images,rescale_factor):
+  resized_images=[]
+  for image in images:
+    resized_images.append(rescale(image, rescale_factor, anti_aliasing=False))
+  return resized_images
 
-def create_ttv_splits(data, target, test_size, valid_size):
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        data, target, test_size=round((test_size+valid_size)*len(data)), shuffle=False)
-    X_test, X_valid, Y_test, Y_valid = train_test_split(
-        X_test, Y_test,
-        test_size=round(valid_size*len(data)),
-        shuffle=False,
-    )
-    return X_train, X_test, X_valid, Y_train, Y_test, Y_valid
+def createsplit(data,targets,test_size,valid_size):
+  X_train, X_test_valid, y_train, y_test_valid = train_test_split(data, targets, test_size=test_size + valid_size, shuffle=False)
+  X_test, X_valid, y_test, y_valid = train_test_split(X_test_valid,y_test_valid,test_size=valid_size / (test_size + valid_size),shuffle=False)
+  return X_train, X_test,X_valid,y_train,y_test,y_valid
 
-def predict_metrics(model, X, Y):
-    predicted = model.predict(X)
-    acc = metrics.accuracy_score(Y, predicted)
-    f1 = metrics.f1_score(Y, predicted, average='macro')
-    return {
-        'model': model,
-        'acc': acc,
-        'f1': f1,
-    }
+
+def createsplitwithsuffle(data,targets,test_size,valid_size):
+  X_train, X_test_valid, y_train, y_test_valid = train_test_split(data, targets, test_size=test_size + valid_size, shuffle=True)
+  X_test, X_valid, y_test, y_valid = train_test_split(X_test_valid,y_test_valid,test_size=valid_size / (test_size + valid_size),shuffle=True)
+  return X_train, X_test,X_valid,y_train,y_test,y_valid
+
+
+def test(clf,X,y):
+  predicted = clf.predict(X)
+  acc = metrics.accuracy_score(y_pred=predicted, y_true=y)
+  f1 = metrics.f1_score(y_pred=predicted, y_true=y, average="macro")
+  return {'acc':acc,'f1':f1}
+
+def run_classification_experiment(clf,X_train,y_train,X_valid,y_valid,gamma,output_model_file,skip_dummy=True):
+    clf.fit(X_train, y_train)
+    metrics_value=test(clf,X_valid,y_valid)
+    if skip_dummy and metrics_value["acc"]<0.11:
+        print("SKipping for {}".format(gamma))
+        return None
+    output_folder = os.path.dirname(output_model_file)
+    if not os.path.isdir(output_folder):
+        os.mkdir(output_folder)
+    dump(clf, output_model_file)
+    return metrics_value
+
+
+def train_val_splits(clf,x_train,y_train,x_test, y_test,x_val, y_val):
+  clf.fit(x_train, y_train)
+  t_ac = clf.score(x_test, y_test)
+  val_ac = clf.score(x_val, y_val)
+  predicted = clf.predict(x_test)
+  f1 = metrics.f1_score(y_pred=predicted,y_true=y_test, average='macro')
+  return t_ac,val_ac,predicted,f1
