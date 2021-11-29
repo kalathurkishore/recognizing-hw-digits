@@ -1,3 +1,4 @@
+The comparision of confusion matrices based on training data.
 ![SVM Confusion Matrix for 10% training data](https://user-images.githubusercontent.com/34184719/143936132-f990b9b1-e55b-4be1-9439-4f871827080c.png)
 ![SVM Confusion Matrix for 20% training data](https://user-images.githubusercontent.com/34184719/143936148-b95a59fc-9a86-440d-aba1-d1a2563e0e51.png)
 ![SVM Confusion Matrix for 30% training data](https://user-images.githubusercontent.com/34184719/143936165-e2103384-7541-4b6a-8b7a-b8824c8ce8dd.png)
